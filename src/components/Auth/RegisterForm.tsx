@@ -11,6 +11,7 @@ export function RegisterForm({ onToggleForm }: RegisterFormProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
   const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,9 +32,13 @@ export function RegisterForm({ onToggleForm }: RegisterFormProps) {
 
     try {
       await signUp(email, password);
-      onToggleForm();
+      // ⬅️ nič nereloaduj
+      // ⬅️ AuthContext sa postará o session
+      onToggleForm(); // späť na login (ak signUp neprihlasuje automaticky)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registrácia zlyhala');
+      setError(
+        err instanceof Error ? err.message : 'Registrácia zlyhala'
+      );
     } finally {
       setLoading(false);
     }

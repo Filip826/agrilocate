@@ -10,6 +10,7 @@ export function LoginForm({ onToggleForm }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,8 +20,13 @@ export function LoginForm({ onToggleForm }: LoginFormProps) {
 
     try {
       await signIn(email, password);
+      // ⬅️ NIČ VIAC NETREBA
+      // AuthContext by mal sám zmeniť session
+      // a appka zobrazí správny screen
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Prihlásenie zlyhalo');
+      setError(
+        err instanceof Error ? err.message : 'Prihlásenie zlyhalo'
+      );
     } finally {
       setLoading(false);
     }
@@ -28,7 +34,7 @@ export function LoginForm({ onToggleForm }: LoginFormProps) {
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-lg">
-
+      
       {/* LOGO */}
       <div className="flex justify-center mb-3">
         <img
