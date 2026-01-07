@@ -8,6 +8,12 @@ import {
   Leaf,
 } from 'lucide-react';
 
+/* ===== JEDNOTNÉ VEĽKOSTI PÍSMA ===== */
+const H2 = "text-2xl md:text-3xl font-semibold";
+const H3 = "text-xl font-semibold";
+const TEXT = "text-base md:text-lg text-gray-700 leading-relaxed";
+const MUTED = "text-sm text-gray-500";
+
 /* ===== SLIDER DATA ===== */
 const slides = [
   {
@@ -49,16 +55,16 @@ export function AboutPage() {
 
       {/* ===== O PROJEKTE ===== */}
       <div className="bg-white rounded-2xl shadow-md p-8 max-w-5xl mx-auto">
-        <h2 className="text-3xl font-semibold mb-6">
+        <h2 className={`${H2} mb-6`}>
           O projekte
         </h2>
-        <p className="text-lg text-gray-700 leading-relaxed mb-4">
+        <p className={`${TEXT} mb-4`}>
           AgriLocate je moderný systém určený pre farmárov a chovateľov,
           ktorí chcú mať prehľad o polohe a pohybe svojho dobytka.
           Pomocou GPS technológie a webovej aplikácie poskytuje
           okamžité informácie v reálnom čase.
         </p>
-        <p className="text-lg text-gray-700 leading-relaxed">
+        <p className={TEXT}>
           Projekt spája hardvér (ESP32 s GPS modulom),
           cloudové služby a moderný frontend do jedného
           jednoduchého a prehľadného riešenia.
@@ -67,15 +73,15 @@ export function AboutPage() {
 
       {/* ===== PREČO VZNIKOL PROJEKT ===== */}
       <div className="bg-green-50 rounded-2xl p-8 max-w-5xl mx-auto">
-        <h2 className="text-2xl font-semibold text-green-700 mb-4">
+        <h2 className={`${H2} text-green-700 mb-4`}>
           Prečo vznikol náš projekt?
         </h2>
-        <p className="text-gray-700 mb-3">
+        <p className={`${TEXT} mb-3`}>
           Projekt AgriLocate vznikol ako reakcia na reálne problémy
           v poľnohospodárstve – stratené zvieratá, nedostatok
           prehľadu o pohybe a časovo náročné manuálne kontroly.
         </p>
-        <p className="text-gray-700">
+        <p className={TEXT}>
           Naším cieľom bolo vytvoriť cenovo dostupné, jednoduché
           a moderné riešenie, ktoré pomôže farmárom zefektívniť
           ich každodennú prácu.
@@ -84,14 +90,14 @@ export function AboutPage() {
 
       {/* ===== SLIDER ===== */}
       <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl mx-auto text-center">
-        <h3 className="text-2xl font-medium mb-4">
+        <h3 className={`${H2} mb-4`}>
           {slides[index].title}
         </h3>
-        <p className="text-gray-600 mb-6">
+        <p className={TEXT}>
           {slides[index].text}
         </p>
 
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 mt-6">
           <button
             onClick={prev}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -116,55 +122,52 @@ export function AboutPage() {
         <Feature icon={<Cpu />} title="ESP32 podpora" />
         <Feature icon={<Leaf />} title="Smart farming" />
       </div>
-      
 
-          {/* ===== GPS MODUL – OBRÁZOK + OPIS ===== */}
-<div className="bg-white rounded-2xl shadow-md p-8 max-w-6xl mx-auto">
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+      {/* ===== GPS MODUL – OBRÁZOK + OPIS ===== */}
+      <div className="bg-white rounded-2xl shadow-md p-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
 
-    {/* OBRÁZOK */}
-    <div>
-      <img
-        src="/obrazky/picture1.jpg"
-        alt="GPS modul zapojený na testovacej doske"
-        className="w-full h-[360px] object-contain rounded-xl shadow bg-gray-50 p-4"
-      />
-      <p className="text-sm text-gray-500 text-center mt-2">
-        GPS modul zapojený počas vývoja projektu
-      </p>
-    </div>
+          <div>
+            <img
+              src="/obrazky/picture1.jpg"
+              alt="GPS modul zapojený na testovacej doske"
+              className="w-full h-[360px] object-contain rounded-xl shadow bg-gray-50 p-4"
+            />
+            <p className={`${MUTED} text-center mt-2`}>
+              GPS modul zapojený počas vývoja projektu
+            </p>
+          </div>
 
-    {/* OPIS */}
-    <div className="space-y-4">
-      <h3 className="text-xl font-semibold text-green-600">
-        Popis GPS modulu
-      </h3>
+          <div className="space-y-4">
+            <h3 className={`${H2} text-green-600`}>
+              Popis GPS modulu
+            </h3>
 
-      <p className="text-gray-700">
-        GPS modul prijíma signály zo satelitov a určuje presnú polohu
-        zariadenia. Tieto údaje sú spracované mikrokontrolérom ESP32
-        a odosielané do webovej aplikácie.
-      </p>
+            <p className={TEXT}>
+              GPS modul prijíma signály zo satelitov a určuje presnú polohu
+              zariadenia. Tieto údaje sú spracované mikrokontrolérom ESP32
+              a odosielané do webovej aplikácie.
+            </p>
 
-      <p className="text-gray-700">
-        Modul bol testovaný v laboratórnych aj terénnych podmienkach,
-        aby bola zabezpečená presnosť a spoľahlivosť meraní.
-      </p>
+            <p className={TEXT}>
+              Modul bol testovaný v  terénnych podmienkach,
+              aby bola zabezpečená presnosť a spoľahlivosť meraní.
+            </p>
 
-      <ul className="list-disc list-inside text-gray-700">
-        <li>Príjem GPS signálu</li>
-        <li>Prepojenie s ESP32</li>
-        <li>Reálne testovanie</li>
-        <li>Prenos dát do cloudu</li>
-      </ul>
-    </div>
+       <ul className={`${TEXT} list-disc list-inside pl-4`}>
+  <li>Príjem GPS signálu</li>
+  <li>Prepojenie s ESP32</li>
+  <li>Reálne testovanie</li>
+  <li>Prenos dát do cloudu</li>
+</ul>
+          </div>
 
-  </div>
-</div>
+        </div>
+      </div>
 
       {/* ===== ZAKLADATELIA ===== */}
       <div className="max-w-5xl mx-auto space-y-8">
-        <h2 className="text-2xl font-semibold text-center">
+        <h2 className={`${H2} text-center`}>
           Zakladatelia projektu
         </h2>
 
@@ -186,43 +189,64 @@ export function AboutPage() {
 
       {/* ===== REÁLNE TESTOVANIE ===== */}
       <div className="bg-white rounded-2xl shadow-md p-8 max-w-6xl mx-auto space-y-6">
-        <h2 className="text-2xl font-semibold text-center">
+        <h2 className={`${H2} text-center`}>
           Reálne testovanie v praxi
         </h2>
 
-        <p className="text-gray-700 text-center max-w-3xl mx-auto">
+        <p className={`${TEXT} text-center max-w-3xl mx-auto`}>
           Súčasťou vývoja projektu AgriLocate bolo aj reálne testovanie
           GPS zariadenia priamo na hospodárskom zvierati.
           Testovali sme stabilitu signálu, prenos dát a praktické uchytenie.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <TestImage
-            src="/obrazky/testovanie/krava-1.jpg"
-            text="Prvé nasadenie GPS zariadenia priamo na krave."
-          />
-          <TestImage
-            src="/obrazky/testovanie/krava-zariadenie.jpg"
-            text="Detail uchytenia GPS zariadenia a elektroniky."
-          />
-          <TestImage
-            src="/obrazky/testovanie/krava-2.jpg"
-            text="Sledovanie pohybu zvieraťa v reálnom teréne."
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[
+            { src: "/obrazky/4.jpg", text: "Prvé nasadenie GPS zariadenia priamo na zviera." },
+            { src: "/obrazky/3.jpg", text: "Detail uchytenia GPS zariadenia a elektroniky." },
+            { src: "/obrazky/2.jpg", text: "Testovanie stability signálu v reálnych podmienkach." },
+            { src: "/obrazky/1.jpg", text: "Sledovanie pohybu hospodárskeho zvieraťa v teréne." },
+          ].map((img) => (
+            <div key={img.src} className="space-y-3">
+              <img
+                src={img.src}
+                alt={img.text}
+                className="w-full h-96 md:h-[500px] object-cover rounded-lg"
+              />
+              <p className={`${MUTED} text-center`}>
+                {img.text}
+              </p>
+            </div>
+          ))}
         </div>
 
-        <p className="text-gray-700 text-center max-w-4xl mx-auto">
+        <p className={`${TEXT} text-center max-w-4xl mx-auto`}>
           Výsledky testovania potvrdili funkčnosť systému aj v reálnych
           podmienkach. Získané GPS dáta boli zobrazované v aplikácii
           AgriLocate a ďalej analyzované pomocou AI asistenta.
         </p>
       </div>
 
+      {/* ===== SPÄTNÁ VÄZBA ===== */}
+      <div className="bg-white rounded-2xl shadow-md p-8 max-w-5xl mx-auto space-y-6">
+        <h2 className={`${H2} text-center`}>
+          Spätná väzba
+        </h2>
+
+        <div className="flex justify-center">
+          <img
+            src="/obrazky/spetna vazba.png"
+            alt="Spätná väzba používateľa"
+            className="w-full max-w-5xl rounded-xl shadow-lg"
+          />
+        </div>
+      </div>
+
       {/* ===== TECHNOLÓGIE ===== */}
       <div className="bg-white rounded-2xl shadow-md p-8 max-w-5xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-6">
+        <h2 className={`${H2} mb-6`}>
           Použité technológie
         </h2>
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {['React', 'TypeScript', 'Supabase', 'OpenStreetMap'].map((t) => (
             <div
@@ -278,30 +302,11 @@ function Founder({
         alt={name}
         className="w-40 h-40 mx-auto rounded-full object-cover mb-4"
       />
-      <h4 className="text-xl font-semibold">{name}</h4>
-      <p className="text-green-600 font-medium">{role}</p>
-      <p className="text-gray-600 mt-3 text-sm">{text}</p>
-    </div>
-  );
-}
-
-function TestImage({
-  src,
-  text,
-}: {
-  src: string;
-  text: string;
-}) {
-  return (
-    <div className="space-y-3">
-      <img
-        src={src}
-        alt={text}
-        className="rounded-xl shadow object-cover w-full h-64"
-      />
-      <p className="text-sm text-gray-600 text-center">
-        {text}
-      </p>
+      <h4 className={`${H3}`}>{name}</h4>
+      <p className={`${TEXT} text-green-600 font-medium`}>
+  {role}
+</p>
+      <p className={`${MUTED} mt-3`}>{text}</p>
     </div>
   );
 }

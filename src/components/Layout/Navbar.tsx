@@ -20,19 +20,23 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
   const { signOut, user } = useAuth();
   const [open, setOpen] = useState(false);
 
+  // ===== JEDNOTNÝ ŠTÝL BUTTONOV (REFERENCIA = ĽAVÁ STRANA)
+  const NAV_BTN =
+    'px-4 py-2 rounded-lg font-medium flex items-center gap-2 text-white';
+
   const navBtn = (tab: 'map' | 'history' | 'about', label: string, Icon: any) => (
     <button
       onClick={() => {
         onTabChange(tab);
         setOpen(false);
       }}
-      className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${
+      className={`${NAV_BTN} ${
         activeTab === tab
-          ? 'bg-green-600 text-white'
-          : 'text-white hover:bg-green-500'
+          ? 'bg-green-600'
+          : 'hover:bg-green-500'
       }`}
     >
-      <Icon className="w-4 h-4 text-white" />
+      <Icon className="w-4 h-4" />
       {label}
     </button>
   );
@@ -63,24 +67,28 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
           </div>
 
           {/* RIGHT */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+
+            {/* AI BUTTON */}
             <button
               onClick={onAIClick}
-              className="hidden sm:flex px-4 py-2 bg-green-600 text-white rounded-lg text-sm items-center gap-2"
+              className={`hidden sm:flex ${NAV_BTN} bg-green-600`}
             >
-              <MessageSquare className="w-4 h-4 text-white" />
+              <MessageSquare className="w-4 h-4" />
               AI Asistent
             </button>
 
-            <span className="hidden md:block text-xs text-white">
+            {/* EMAIL */}
+            <span className="hidden md:flex items-center px-4 py-2 text-sm text-white">
               {user?.email}
             </span>
 
+            {/* LOGOUT */}
             <button
               onClick={signOut}
-              className="hidden md:flex text-white"
+              className={`hidden md:flex ${NAV_BTN} hover:bg-red-500`}
             >
-              <LogOut className="text-white" />
+              <LogOut className="w-4 h-4" />
             </button>
 
             {/* HAMBURGER */}
@@ -105,19 +113,19 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
                 onAIClick();
                 setOpen(false);
               }}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2"
+              className={`w-full ${NAV_BTN} bg-green-600`}
             >
-              <MessageSquare className="w-4 h-4 text-white" />
+              <MessageSquare className="w-4 h-4" />
               AI Asistent
             </button>
 
-            <div className="text-xs text-white mt-2">
+            <div className="px-4 py-2 text-xs text-white">
               {user?.email}
             </div>
 
             <button
               onClick={signOut}
-              className="text-white text-sm mt-2 hover:text-red-400"
+              className="px-4 py-2 text-sm text-white hover:text-red-400"
             >
               Odhlásiť sa
             </button>
