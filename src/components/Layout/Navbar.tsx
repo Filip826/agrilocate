@@ -23,7 +23,6 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
 
   const [open, setOpen] = useState(false);
 
-  // login modal
   const [showAuth, setShowAuth] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,14 +30,10 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string>('');
 
-  // povolený email
-  const ALLOWED_EMAIL = import.meta.env.VITE_DEMO_EMAIL as string | undefined;
-
   const NAV_BTN =
     'px-4 py-2 rounded-lg font-medium flex items-center gap-2 text-white';
 
   const goTab = (tab: 'map' | 'history' | 'about' | 'settings') => {
-    // neprihlásený user môže ísť len na "about"
     if (!user && tab !== 'about') {
       setShowAuth(true);
       setAuthError('');
@@ -68,22 +63,8 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
 
   const doLogin = async () => {
     setAuthError('');
-
-    if (!ALLOWED_EMAIL) {
-      setAuthError(
-        'Na prihlásenie musíš mať oprávnené zariadenie, ktoré ti pridelí povolený email.'
-      );
-      return;
-    }
-
-    if (email.trim().toLowerCase() !== ALLOWED_EMAIL.trim().toLowerCase()) {
-      setAuthError(
-        'Na prihlásenie musíš mať oprávnené zariadenie, ktoré ti pridelí povolený email.'
-      );
-      return;
-    }
-
     setAuthLoading(true);
+
     try {
       await signIn(email, password);
       setShowAuth(false);
@@ -111,7 +92,6 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
       <nav className="bg-black border-b border-gray-800 sticky top-0 z-[2000]">
         <div className="max-w-7xl mx-auto px-4 py-0">
           <div className="flex items-center justify-between">
-            {/* LEFT */}
             <div className="flex items-center gap-4">
               <button onClick={() => goTab('about')}>
                 <img
@@ -134,9 +114,7 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
               </div>
             </div>
 
-            {/* RIGHT */}
             <div className="flex items-center gap-2">
-              {/* AI vidia všetci */}
               <button
                 onClick={onAIClick}
                 className={`hidden sm:flex ${NAV_BTN} bg-green-600`}
@@ -145,7 +123,6 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
                 AI Asistent
               </button>
 
-              {/* AUTH */}
               {!user ? (
                 <button
                   onClick={() => {
@@ -182,7 +159,6 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
             </div>
           </div>
 
-          {/* MOBILE MENU */}
           {open && (
             <div className="md:hidden mt-3 space-y-2 border-t border-gray-800 pt-3">
               {navBtn('about', 'O nás', Info)}
@@ -195,7 +171,6 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
                 </>
               )}
 
-              {/* AI vidia všetci */}
               <button
                 onClick={() => {
                   onAIClick();
@@ -229,7 +204,9 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
                     Odhlásiť
                   </button>
 
-                  <div className="px-4 py-2 text-xs text-white">{user?.email}</div>
+                  <div className="px-4 py-2 text-xs text-white">
+                    {user?.email}
+                  </div>
                 </>
               )}
             </div>
@@ -237,7 +214,6 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
         </div>
       </nav>
 
-      {/* LOGIN MODAL */}
       {showAuth && (
         <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center px-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-6 space-y-4">
@@ -295,7 +271,8 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
             </button>
 
             <p className="text-xs text-gray-500">
-              Neprihlásený používateľ vidí iba stránku „O nás“, ale AI Asistent je dostupný pre všetkých.
+              Neprihlásený používateľ vidí iba stránku „O nás“, ale AI Asistent
+              je dostupný pre všetkých.
             </p>
           </div>
         </div>
