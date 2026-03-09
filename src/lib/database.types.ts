@@ -33,6 +33,7 @@ export type Database = {
           created_at?: string;
         };
       };
+
       locations: {
         Row: {
           id: string;
@@ -65,6 +66,39 @@ export type Database = {
           timestamp?: string;
         };
       };
-    };
+
+     geofence_settings: {
+  Row: {
+    id: string;
+    user_id: string;
+    device_id: string;
+    receiver_lat: number;
+    receiver_lon: number;
+    radius_m: number;
+    notify_email: string;
+    is_active: boolean;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    user_id: string;
+    device_id: string;
+    receiver_lat: number;
+    receiver_lon: number;
+    radius_m: number;
+    notify_email: string;
+    is_active?: boolean;
+    created_at?: string;
+  };
+  Update: {
+    id?: string;
+    user_id?: string;
+    device_id?: string;
+    receiver_lat?: number;
+    receiver_lon?: number;
+    radius_m?: number;
+    notify_email?: string;
+    is_active?: boolean;
+    created_at?: string;
   };
 };

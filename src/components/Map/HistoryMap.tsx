@@ -1,3 +1,5 @@
+'use client';
+
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -27,6 +29,15 @@ interface HistoryMapProps {
   locations: Location[];
 }
 
+function formatDate(value: string | null) {
+  if (!value) return 'Neznámy čas';
+
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return 'Neplatný dátum';
+
+  return d.toLocaleString('sk-SK');
+}
+
 export function HistoryMap({ locations }: HistoryMapProps) {
   if (!locations || locations.length === 0) {
     return (
@@ -36,7 +47,24 @@ export function HistoryMap({ locations }: HistoryMapProps) {
     );
   }
 
-  const path: LatLngExpression[] = locations.map((l) => [
+  // odfiltrujeme len body ktoré majú platné súradnice
+  const validLocations = locations.filter(
+    (l) =>
+      l.lat !== null &&
+      l.lon !== null &&
+      !isNaN(Number(l.lat)) &&
+      !isNaN(Number(l.lon))
+  );
+
+  if (validLocations.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center text-gray-500">
+        Záznamy existujú, ale neobsahujú platné GPS súradnice
+      </div>
+    );
+  }
+
+  const path: LatLngExpression[] = validLocations.map((l) => [
     Number(l.lat),
     Number(l.lon),
   ]);
@@ -45,23 +73,19 @@ export function HistoryMap({ locations }: HistoryMapProps) {
 
   return (
     <div className="relative z-40 h-full w-full">
-      <MapContainer
-        center={center}
-        zoom={14}
-        className="h-full w-full"
-      >
+      <MapContainer center={center} zoom={14} className="h-full w-full">
         <TileLayer
-          attribution='&copy; OpenStreetMap'
+          attribution="&copy; OpenStreetMap"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <Polyline positions={path} color="blue" weight={4} />
+        {path.length > 1 && <Polyline positions={path} color="blue" weight={4} />}
 
         <Marker position={path[0]} icon={startIcon}>
           <Popup>
             <strong>Začiatok pohybu</strong>
             <br />
-            {new Date(locations[0].created_at).toLocaleString('sk-SK')}
+            {formatDate(validLocations[0].created_at)}
           </Popup>
         </Marker>
 
@@ -69,9 +93,7 @@ export function HistoryMap({ locations }: HistoryMapProps) {
           <Popup>
             <strong>Koniec pohybu</strong>
             <br />
-            {new Date(
-              locations[locations.length - 1].created_at
-            ).toLocaleString('sk-SK')}
+            {formatDate(validLocations[validLocations.length - 1].created_at)}
           </Popup>
         </Marker>
       </MapContainer>
