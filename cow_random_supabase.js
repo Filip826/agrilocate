@@ -6,7 +6,6 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const deviceId = 'krava_1';
 
 // ================== HRANICE POLYGONU ==================
-// Body zoradené po obvode
 const fence = [
   { lat: 48.97702, lon: 20.41976 },
   { lat: 48.97855, lon: 20.42252 },
@@ -16,6 +15,26 @@ const fence = [
 
 // ================== KRMELEC ==================
 const feeder = { lat: 48.97730, lon: 20.42220 };
+
+// ================== NASTAVENIA SPRÁVANIA ==================
+// nočný spánok: 22:00 - 05:00
+const NIGHT_SLEEP_START_HOUR = 22;
+const NIGHT_SLEEP_END_HOUR = 5;
+
+// interval posielania
+const MIN_DELAY_SEC = 30;
+const MAX_DELAY_SEC = 40;
+
+// pri krmelci nech zostane dlhšie
+const FEEDING_MIN_TICKS = 10;
+const FEEDING_MAX_TICKS = 18;
+
+// nočný spánok minimálne 5 hodín
+const NIGHT_SLEEP_MIN_HOURS = 5;
+
+// koľko približne odoslaní za 5 hodín pri 30-40 s intervale
+const NIGHT_SLEEP_MIN_TICKS = 450;
+const NIGHT_SLEEP_MAX_TICKS = 600;
 
 // ================== POMOCNÉ FUNKCIE ==================
 function rand(min, max) {
@@ -95,6 +114,15 @@ function moveToward(current, target, factor) {
   };
 }
 
+function getCurrentHour() {
+  return new Date().getHours();
+}
+
+function isNightSleepTime() {
+  const hour = getCurrentHour();
+  return hour >= NIGHT_SLEEP_START_HOUR || hour < NIGHT_SLEEP_END_HOUR;
+}
+
 // ================== STAVY KRAVY ==================
 const STATES = {
   GRAZING: 'PASIE_SA',
@@ -110,12 +138,17 @@ let target = randomPointInsidePolygon();
 let stateTicks = randInt(3, 8);
 
 function pickState() {
+  // v noci spi
+  if (isNightSleepTime()) {
+    return STATES.SLEEPING;
+  }
+
   const r = Math.random();
 
   if (r < 0.35) return STATES.GRAZING;
   if (r < 0.60) return STATES.WALKING;
-  if (r < 0.78) return STATES.FEEDING;
-  if (r < 0.92) return STATES.RESTING;
+  if (r < 0.80) return STATES.FEEDING;
+  if (r < 0.93) return STATES.RESTING;
   return STATES.SLEEPING;
 }
 
@@ -136,17 +169,23 @@ function updateState() {
 
   switch (currentState) {
     case STATES.SLEEPING:
-      stateTicks = randInt(8, 16);
+      // v noci spi aspoň 5 hodín
+      if (isNightSleepTime()) {
+        stateTicks = randInt(NIGHT_SLEEP_MIN_TICKS, NIGHT_SLEEP_MAX_TICKS);
+      } else {
+        stateTicks = randInt(20, 40);
+      }
       target = { ...currentPosition };
       break;
 
     case STATES.RESTING:
-      stateTicks = randInt(4, 8);
+      stateTicks = randInt(8, 16);
       target = { ...currentPosition };
       break;
 
     case STATES.FEEDING:
-      stateTicks = randInt(4, 9);
+      // pri krmelci bude dlhšie
+      stateTicks = randInt(FEEDING_MIN_TICKS, FEEDING_MAX_TICKS);
       target = { ...feeder };
       break;
 
@@ -169,27 +208,27 @@ function simulateCow() {
   let next = { ...currentPosition };
 
   if (currentState === STATES.SLEEPING) {
-    const j = jitter(0.000002, 0.000002);
+    const j = jitter(0.000001, 0.000001);
     next.lat += j.lat;
     next.lon += j.lon;
   } else if (currentState === STATES.RESTING) {
-    const j = jitter(0.000008, 0.000008);
+    const j = jitter(0.000004, 0.000004);
     next.lat += j.lat;
     next.lon += j.lon;
   } else if (currentState === STATES.FEEDING) {
-    next = moveToward(currentPosition, target, 0.10);
-    const j = jitter(0.000008, 0.000008);
+    next = moveToward(currentPosition, target, 0.06);
+    const j = jitter(0.000004, 0.000004);
     next.lat += j.lat;
     next.lon += j.lon;
   } else if (currentState === STATES.WALKING) {
     next = moveToward(currentPosition, target, 0.10);
-    const j = jitter(0.000015, 0.000015);
+    const j = jitter(0.000010, 0.000010);
     next.lat += j.lat;
     next.lon += j.lon;
   } else {
     // PASIE_SA
     next = moveToward(currentPosition, target, 0.08);
-    const j = jitter(0.000012, 0.000012);
+    const j = jitter(0.000008, 0.000008);
     next.lat += j.lat;
     next.lon += j.lon;
   }
@@ -245,7 +284,7 @@ async function sendPoint() {
     const responseText = await res.text();
 
     console.log(
-      `[${new Date().toLocaleTimeString()}] ${point.state} | LAT=${point.lat} | LON=${point.lon} | ${point.inside_zone ? 'VNUTRI' : 'MIMO'} | status=${res.status}`
+      `[${new Date().toLocaleTimeString()}] ${point.state} | LAT=${point.lat} | LON=${point.lon} | ${point.inside_zone ? 'VNUTRI' : 'MIMO'} | status=${res.status} | ticks=${stateTicks}`
     );
 
     if (!res.ok) {
@@ -255,12 +294,14 @@ async function sendPoint() {
     console.error('Chyba pri odosielani:', err.message);
   }
 
-  const delay = randInt(30, 40) * 1000;
+  const delay = randInt(MIN_DELAY_SEC, MAX_DELAY_SEC) * 1000;
   setTimeout(sendPoint, delay);
 }
 
-console.log('🐄 Simulator kravy spusteny');
+console.log('Simulator kravy spusteny');
 console.log(`Zariadenie: ${deviceId}`);
 console.log('Ukladanie priamo do Supabase...');
 console.log('Krava sa pohybuje len vo vnútri hranice.');
+console.log(`Nočný spánok: ${NIGHT_SLEEP_START_HOUR}:00 - ${NIGHT_SLEEP_END_HOUR}:00`);
+console.log('Pri krmelci zostáva dlhšie.');
 sendPoint();
