@@ -8,6 +8,7 @@ import {
   Settings,
   LogIn,
   LogOut,
+  Bell,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -108,7 +109,7 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
                   <>
                     {navBtn('map', 'Mapa', MapPin)}
                     {navBtn('history', 'História', History)}
-                    {navBtn('settings', 'Nastavenia', Settings)}
+                    {navBtn('settings', 'Notifikácie', Bell)}
                   </>
                 )}
               </div>
@@ -167,7 +168,7 @@ export function Navbar({ activeTab, onTabChange, onAIClick }: NavbarProps) {
                 <>
                   {navBtn('map', 'Mapa', MapPin)}
                   {navBtn('history', 'História', History)}
-                  {navBtn('settings', 'Nastavenia', Settings)}
+                 {navBtn('settings', 'Notifikácie', Bell)}
                 </>
               )}
 

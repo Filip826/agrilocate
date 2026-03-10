@@ -38,7 +38,11 @@ interface DashboardProps {
 }
 
 // Fake história: body stoja na mieste, mení sa len čas
-function makeStaticHistory(deviceId: string, lat: number, lon: number): UiLocation[] {
+function makeStaticHistory(
+  deviceId: string,
+  lat: number,
+  lon: number
+): UiLocation[] {
   const now = Date.now();
   const pts: UiLocation[] = [];
 
@@ -62,12 +66,13 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
 
   const [showAI, setShowAI] = useState(false);
 
-  // ✅ JEDINÝ ADMIN EMAIL
   const ADMIN_EMAIL = 'hodakfilip24@gmail.com';
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  // ====== Protected tabs (len po prihlásení) ======
-  const protectedTabs = useMemo(() => new Set(['map', 'history', 'settings']), []);
+  const protectedTabs = useMemo(
+    () => new Set(['map', 'history', 'settings']),
+    []
+  );
 
   useEffect(() => {
     if (!user && protectedTabs.has(activeTab)) {
@@ -75,27 +80,20 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
     }
   }, [user, activeTab, protectedTabs]);
 
-  // ====== Base bod ======
   const BASE_LAT = 48.977345;
   const BASE_LON = 20.420361;
-
-  // ~50 m offset
   const OFFSET = 0.00045;
 
-  // ====== IDs zariadení ======
   const REAL_ID = 'device_id';
   const FAKE2_ID = 'device-fake-2';
   const FAKE3_ID = 'device-fake-3';
 
-  // vybrané zariadenie
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>(REAL_ID);
 
-  // ====== REAL dáta zo Supabase ======
   const [realLocations, setRealLocations] = useState<UiLocation[]>([]);
   const [realLast, setRealLast] = useState<UiLocation | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ====== Fake current pozície ======
   const fake2Current = useMemo(
     () => ({
       lat: BASE_LAT + OFFSET,
@@ -114,7 +112,6 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
     []
   );
 
-  // ====== Fake histórie ======
   const fake2History = useMemo(
     () => makeStaticHistory(FAKE2_ID, fake2Current.lat, fake2Current.lon),
     [fake2Current.lat, fake2Current.lon]
@@ -135,7 +132,6 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
         return;
       }
 
-      // ✅ ak NIE JE admin, neuvidí žiadne dáta
       if (!isAdmin) {
         setRealLocations([]);
         setRealLast(null);
@@ -165,7 +161,8 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
       }));
 
       mapped.sort(
-        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       );
 
       setRealLocations(mapped);
@@ -176,9 +173,54 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
     load();
   }, [user, isAdmin]);
 
-  // ====== Zariadenia na mapu ======
+  // ====== Realtime updates ======
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+
+    const channel = supabase
+      .channel('locations-realtime-dashboard')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'locations',
+        },
+        (payload) => {
+          const r = payload.new as any;
+
+          const newLocation: UiLocation = {
+            device_id: String(r.device_id ?? REAL_ID),
+            lat: Number(r.lat ?? r.latitude),
+            lon: Number(r.lon ?? r.longitude),
+            created_at: String(r.created_at ?? r.timestamp),
+          };
+
+          setRealLocations((prev) => {
+            const updated = [...prev, newLocation];
+
+            updated.sort(
+              (a, b) =>
+                new Date(a.created_at).getTime() -
+                new Date(b.created_at).getTime()
+            );
+
+            return updated.slice(-1500);
+          });
+
+          setRealLast(newLocation);
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime status:', status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isAdmin]);
+
   const devices: UiDevice[] = useMemo(() => {
-    // ✅ ak nie je admin, mapa bude prázdna
     if (!isAdmin) return [];
 
     const realCurrent =
@@ -216,7 +258,6 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
     ];
   }, [isAdmin, realLast, fake2Current, fake3Current]);
 
-  // ====== Vybrané zariadenie -> dáta pre grafy ======
   const selectedLocations: UiLocation[] = useMemo(() => {
     if (!isAdmin) return [];
 
@@ -228,17 +269,22 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
 
   const selectedDeviceName = useMemo(() => {
     if (!isAdmin) return 'Bez dát';
-    return devices.find((d) => d.id === selectedDeviceId)?.device_name ?? 'Zariadenie';
+    return (
+      devices.find((d) => d.id === selectedDeviceId)?.device_name ??
+      'Zariadenie'
+    );
   }, [isAdmin, devices, selectedDeviceId]);
 
   const isFakeSelected = selectedDeviceId !== REAL_ID;
 
-  // ====== História: všetky zariadenia ======
   const allLocationsForHistory: UiLocation[] = useMemo(() => {
     if (!isAdmin) return [];
 
     const all = [...realLocations, ...fake2History, ...fake3History];
-    all.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    all.sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
     return all;
   }, [isAdmin, realLocations, fake2History, fake3History]);
 
@@ -261,10 +307,8 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
       />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
-        {/* ===== ABOUT ===== */}
         {activeTab === 'about' && <AboutPage />}
 
-        {/* ===== MAP ===== */}
         {activeTab === 'map' && (
           <div className="space-y-6">
             {!user ? (
@@ -279,14 +323,18 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
               <>
                 {!isAdmin && (
                   <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4">
-                    Tento účet nemá prístup k GPS dátam. Dáta sú dostupné iba pre účet{' '}
-                    <b>{ADMIN_EMAIL}</b>.
+                    Tento účet nemá prístup k GPS dátam. Dáta sú dostupné iba
+                    pre účet <b>{ADMIN_EMAIL}</b>.
                   </div>
                 )}
 
                 <div className="bg-white rounded-xl shadow p-4">
-                  <div className="text-sm text-gray-600">Vybrané zariadenie:</div>
-                  <div className="text-lg font-semibold">{selectedDeviceName}</div>
+                  <div className="text-sm text-gray-600">
+                    Vybrané zariadenie:
+                  </div>
+                  <div className="text-lg font-semibold">
+                    {selectedDeviceName}
+                  </div>
                   <div className="text-xs text-gray-500 mt-1">
                     {isAdmin
                       ? 'Klikni na marker na mape a prepneš grafy + prehľad aktivity.'
@@ -307,7 +355,6 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
           </div>
         )}
 
-        {/* ===== HISTORY ===== */}
         {activeTab === 'history' && (
           <div className="space-y-4">
             {!user ? (
@@ -316,8 +363,8 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
               </div>
             ) : !isAdmin ? (
               <div className="bg-white rounded-xl shadow p-6 text-gray-700">
-                Pre tento účet je história prázdna. Dáta sú dostupné iba pre účet{' '}
-                <b>{ADMIN_EMAIL}</b>.
+                Pre tento účet je história prázdna. Dáta sú dostupné iba pre
+                účet <b>{ADMIN_EMAIL}</b>.
               </div>
             ) : (
               <HistoryView
@@ -328,13 +375,11 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
           </div>
         )}
 
-        {/* ===== SETTINGS ===== */}
         {activeTab === 'settings' && (user ? <SettingsPage /> : <AboutPage />)}
       </main>
 
       <Footer />
 
-      {/* ===== AI MODAL ===== */}
       {showAI && (
         <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
           <AIAssistant
