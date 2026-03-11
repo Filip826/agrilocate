@@ -21,11 +21,10 @@ type LocationRow = {
 // Tvoja virtuálna ohrada
 const fence = [
   { lat: 48.97702, lon: 20.41976 },
-  { lat: 48.97855, lon: 20.42252 },
-  { lat: 48.97669, lon: 20.42653 },
-  { lat: 48.97474, lon: 20.42607 },
+  { lat: 48.98143, lon: 20.42789 },
+  { lat: 48.98230, lon: 20.42308 },
+  { lat: 48.97474, lon: 20.42607 }
 ];
-
 const DEVICE_ID = 'krava_1';
 const STILL_HOURS = 10;
 const STILL_DISTANCE_M = 5;
