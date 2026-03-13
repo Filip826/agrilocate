@@ -98,7 +98,7 @@ export function LiveCharts({ locations }: { locations: Location[] }) {
         {/* ===== GRAF 2 ===== */}
         <div className="h-[300px]">
           <h3 className="text-lg font-medium mb-2">
-            Dnes vs. včera – porovnanie
+            Včera vs. dnes – porovnanie
           </h3>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
