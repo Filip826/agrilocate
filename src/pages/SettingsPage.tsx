@@ -23,7 +23,7 @@ const fence = [
   { lat: 48.97702, lon: 20.41976 },
   { lat: 48.98143, lon: 20.42789 },
   { lat: 48.98230, lon: 20.42308 },
-  { lat: 48.97474, lon: 20.42607 }
+  { lat: 48.97474, lon: 20.42607 },
 ];
 
 const DEVICE_ID = 'krava_1';
@@ -90,7 +90,7 @@ export function SettingsPage() {
   const lastOutsideRef = useRef<string>('');
   const lastStillRef = useRef<string>('');
 
-  // Funkcia na odosielanie emailu
+  // Odoslanie emailu cez Supabase function
   const sendEmail = async (text: string) => {
     try {
       await fetch('/functions/v1/send-email', {
@@ -111,35 +111,37 @@ export function SettingsPage() {
 
     let mounted = true;
 
-    const pushNotification = (type: AppNotification['type'], text: string, dedupeKey?: string) => {
+    const pushNotification = (
+      type: AppNotification['type'],
+      text: string,
+      dedupeKey?: string,
+      coords?: { lat: number; lon: number }
+    ) => {
       if (!mounted) return;
-
-      // deduplikácia
       if (type === 'error' && dedupeKey && lastOutsideRef.current === dedupeKey) return;
       if (type === 'warning' && dedupeKey && lastStillRef.current === dedupeKey) return;
 
       if (type === 'error' && dedupeKey) lastOutsideRef.current = dedupeKey;
       if (type === 'warning' && dedupeKey) lastStillRef.current = dedupeKey;
 
-      // 1️⃣ Pridaj do notifikácií
+      const fullText = coords ? `${text} (Lat: ${coords.lat.toFixed(6)}, Lon: ${coords.lon.toFixed(6)})` : text;
+
       setNotifications(prev => [
         {
           id: crypto.randomUUID(),
           type,
-          text,
+          text: fullText,
           createdAt: new Date().toISOString(),
         },
         ...prev.slice(0, 25),
       ]);
 
-      // 2️⃣ Odosli email
-      sendEmail(text);
+      sendEmail(fullText);
     };
 
     const checkDeviceStatus = async () => {
       try {
         const now = new Date();
-
         const { data, error } = await supabase
           .from('locations')
           .select('*')
@@ -164,6 +166,7 @@ export function SettingsPage() {
         }
 
         const latest = rows[0];
+
         if (mounted) {
           setLastLocation(latest);
           setLastChecked(now.toISOString());
@@ -171,25 +174,26 @@ export function SettingsPage() {
 
         let status: 'ok' | 'outside' | 'still' | 'unknown' = 'ok';
 
-        // 1️⃣ Kontrola inside/outside
+        // Kontrola inside/outside
         if (latest.lat != null && latest.lon != null) {
           const inside = isInsidePolygon(Number(latest.lat), Number(latest.lon), fence);
-
           if (!inside) {
             status = 'outside';
             const outsideKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}-outside`;
             pushNotification(
               'error',
-              `🚨 Zariadenie je von z ohrady. Posledná poloha: ${Number(latest.lat).toFixed(6)}, ${Number(latest.lon).toFixed(6)}.`,
-              outsideKey
+              'Zariadenie je von z ohrady.',
+              outsideKey,
+              { lat: Number(latest.lat), lon: Number(latest.lon) }
             );
           }
         }
 
-        // 2️⃣ Kontrola still
+        // Kontrola still
         if (status !== 'outside' && latest.created_at) {
           const latestTime = new Date(latest.created_at).getTime();
           const tenHoursAgo = latestTime - STILL_HOURS * 60 * 60 * 1000;
+
           const pointsWithinWindow = rows.filter(row => {
             const t = new Date(row.created_at).getTime();
             return !Number.isNaN(t) && t >= tenHoursAgo && t <= latestTime;
@@ -197,7 +201,13 @@ export function SettingsPage() {
 
           const oldestInWindow = pointsWithinWindow[pointsWithinWindow.length - 1];
 
-          if (oldestInWindow && latest.lat != null && latest.lon != null && oldestInWindow.lat != null && oldestInWindow.lon != null) {
+          if (
+            oldestInWindow &&
+            latest.lat != null &&
+            latest.lon != null &&
+            oldestInWindow.lat != null &&
+            oldestInWindow.lon != null
+          ) {
             const oldestTime = new Date(oldestInWindow.created_at).getTime();
             const diffHours = (latestTime - oldestTime) / (1000 * 60 * 60);
 
@@ -212,23 +222,27 @@ export function SettingsPage() {
               if (moved < STILL_DISTANCE_M) {
                 status = 'still';
                 const stillKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}-still`;
-                pushNotification('warning', `⚠️ Zariadenie sa nepohlo viac ako 10 hodín.`, stillKey);
+                pushNotification(
+                  'warning',
+                  'Zariadenie sa nepohlo viac ako 10 hodín.',
+                  stillKey,
+                  { lat: Number(latest.lat), lon: Number(latest.lon) }
+                );
               }
             }
           }
         }
 
-        // 3️⃣ Každú hodinu zelená správa
+        // Každú hodinu zelená správa
         if (!lastHourlyRef.current || !sameHour(lastHourlyRef.current, now)) {
           lastHourlyRef.current = now;
-          pushNotification('success', `✅ Zariadenie je v poriadku.`);
+          pushNotification('success', 'Zariadenie je v poriadku.');
         }
 
         if (mounted) {
           setCurrentStatus(status);
           setLoading(false);
         }
-
       } catch (err) {
         console.error('Neočakávaná chyba pri kontrole notifikácií:', err);
         if (mounted) setLoading(false);
@@ -237,6 +251,7 @@ export function SettingsPage() {
 
     checkDeviceStatus();
     const interval = setInterval(checkDeviceStatus, 60000);
+
     return () => {
       mounted = false;
       clearInterval(interval);
@@ -259,23 +274,61 @@ export function SettingsPage() {
     return 'Stav zariadenia nie je dostupný';
   };
 
+  const notificationBox = (type: AppNotification['type']) => {
+    if (type === 'success') return 'bg-green-50 border-green-200 text-green-800';
+    if (type === 'warning') return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+    return 'bg-red-50 border-red-200 text-red-800';
+  };
+
+  const notificationIcon = (type: AppNotification['type']) => {
+    if (type === 'success') return <CheckCircle2 className="w-5 h-5" />;
+    if (type === 'warning') return <AlertTriangle className="w-5 h-5" />;
+    return <Siren className="w-5 h-5" />;
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Horný box s info */}
       <div className="bg-white p-6 rounded-2xl shadow">
         <div className="flex items-center gap-3 mb-3">
           <Bell className="w-7 h-7 text-green-600" />
           <h2 className="text-2xl font-semibold">Notifikácie zariadenia</h2>
         </div>
-        <p>Zariadenie: <b>{DEVICE_ID}</b></p>
-        <p>Účet: <b>{user.email}</b></p>
+
+        <p className="text-gray-600">Zariadenie: <b>{DEVICE_ID}</b></p>
+        <p className="text-gray-600">Účet: <b>{user.email}</b></p>
       </div>
 
+      {/* Status box */}
       <div className={`border p-5 rounded-2xl ${statusBox()}`}>
         <div className="font-semibold text-lg">{statusText()}</div>
-        {lastLocation && <div className="text-sm mt-2">Posledná poloha: {Number(lastLocation.lat).toFixed(6)}, {Number(lastLocation.lon).toFixed(6)}</div>}
-        {lastChecked && <div className="text-sm mt-1">Posledná kontrola: {new Date(lastChecked).toLocaleString('sk-SK')}</div>}
+        {lastLocation && (
+          <div className="text-sm mt-2">
+            Posledná poloha: {Number(lastLocation.lat).toFixed(6)}, {Number(lastLocation.lon).toFixed(6)}
+          </div>
+        )}
+        {lastChecked && (
+          <div className="text-sm mt-1">
+            Posledná kontrola: {new Date(lastChecked).toLocaleString('sk-SK')}
+          </div>
+        )}
       </div>
 
+      {/* Virtuálna ohrada */}
+      <div className="bg-white p-6 rounded-2xl shadow">
+        <h3 className="text-xl font-semibold mb-4">Virtuálna ohrada</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+          {fence.map((point, index) => (
+            <div key={index} className="border rounded-xl p-3 bg-gray-50">
+              <div className="font-medium">Bod {index + 1}</div>
+              <div>Lat: {point.lat}</div>
+              <div>Lon: {point.lon}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* História notifikácií */}
       <div className="bg-white p-6 rounded-2xl shadow">
         <h3 className="text-xl font-semibold mb-4">História notifikácií</h3>
         {loading ? (
@@ -284,9 +337,15 @@ export function SettingsPage() {
           <div className="text-gray-500">Zatiaľ žiadne notifikácie.</div>
         ) : (
           <div className="space-y-3">
-            {notifications.map(n => (
-              <div key={n.id} className={`border rounded-xl p-4 ${n.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : n.type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
-                {n.text}
+            {notifications.map((n) => (
+              <div key={n.id} className={`border rounded-xl p-4 ${notificationBox(n.type)}`}>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">{notificationIcon(n.type)}</div>
+                  <div className="flex-1">
+                    <div className="font-medium">{n.text}</div>
+                    <div className="text-xs mt-1 opacity-80">{new Date(n.createdAt).toLocaleString('sk-SK')}</div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
