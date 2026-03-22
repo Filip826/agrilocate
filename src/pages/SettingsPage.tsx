@@ -18,6 +18,9 @@ type LocationRow = {
   created_at: string;
 };
 
+// 🔥 TU DAJ SVOJU URL
+const SUPABASE_FUNCTION_URL = "https://qsdcgqllaaovuhicoqiw.supabase.co/functions/v1/send-email";
+
 // Virtuálna ohrada
 const fence = [
   { lat: 48.97702, lon: 20.41976 },
@@ -90,14 +93,15 @@ export function SettingsPage() {
   const lastOutsideRef = useRef<string>('');
   const lastStillRef = useRef<string>('');
 
-  // Odoslanie emailu cez Supabase function
   const sendEmail = async (text: string) => {
     try {
-      await fetch('/functions/v1/send-email', {
+      const res = await fetch(SUPABASE_FUNCTION_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
+      const data = await res.json();
+      console.log("EMAIL RESPONSE:", data);
     } catch (err) {
       console.error('Chyba pri odosielaní emailu:', err);
     }
@@ -118,13 +122,16 @@ export function SettingsPage() {
       coords?: { lat: number; lon: number }
     ) => {
       if (!mounted) return;
+
       if (type === 'error' && dedupeKey && lastOutsideRef.current === dedupeKey) return;
       if (type === 'warning' && dedupeKey && lastStillRef.current === dedupeKey) return;
 
       if (type === 'error' && dedupeKey) lastOutsideRef.current = dedupeKey;
       if (type === 'warning' && dedupeKey) lastStillRef.current = dedupeKey;
 
-      const fullText = coords ? `${text} (Lat: ${coords.lat.toFixed(6)}, Lon: ${coords.lon.toFixed(6)})` : text;
+      const fullText = coords
+        ? `${text} (Lat: ${coords.lat.toFixed(6)}, Lon: ${coords.lon.toFixed(6)})`
+        : text;
 
       setNotifications(prev => [
         {
@@ -136,7 +143,10 @@ export function SettingsPage() {
         ...prev.slice(0, 25),
       ]);
 
-      sendEmail(fullText);
+      // 🔥 Odosielame email len pre outside / still a success raz za hodinu
+      if (type === 'error' || type === 'warning' || type === 'success') {
+        sendEmail(fullText);
+      }
     };
 
     const checkDeviceStatus = async () => {
@@ -233,7 +243,7 @@ export function SettingsPage() {
           }
         }
 
-        // Každú hodinu zelená správa
+        // 🔥 EMAIL RAZ ZA HODINU (success)
         if (!lastHourlyRef.current || !sameHour(lastHourlyRef.current, now)) {
           lastHourlyRef.current = now;
           pushNotification('success', 'Zariadenie je v poriadku.');
