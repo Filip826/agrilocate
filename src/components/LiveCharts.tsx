@@ -36,6 +36,7 @@ export function LiveCharts({ locations }: { locations: Location[] }) {
     l.created_at.startsWith(yesterday)
   );
 
+  // ================= HOURLY =================
   const hourlyActivity = Array.from({ length: 24 }, (_, h) => ({
     hour: `${h}:00`,
     points: todayLocs.filter(l =>
@@ -64,12 +65,56 @@ export function LiveCharts({ locations }: { locations: Location[] }) {
     },
   ];
 
+  // ================= WEEKLY (Po–Ne) =================
+  const sorted = [...locations].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() -
+      new Date(b.created_at).getTime()
+  );
+
+  const weekMap: Record<string, number> = {};
+
+  const now = new Date();
+  const day = now.getDay(); // 0 = nedeľa
+
+  // nájdi pondelok
+  const monday = new Date(now);
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  monday.setDate(now.getDate() + diffToMonday);
+
+  // vytvor Po → Ne
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+
+    const key = d.toISOString().slice(0, 10);
+    weekMap[key] = 0;
+  }
+
+  // výpočet vzdialenosti
+  sorted.forEach((point, i) => {
+    if (i === 0) return;
+
+    const date = point.created_at.slice(0, 10);
+    if (!(date in weekMap)) return;
+
+    const prev = sorted[i - 1];
+    const dist = distance(prev, point);
+
+    weekMap[date] += dist;
+  });
+
+  const weeklyData = Object.entries(weekMap).map(([date, dist]) => ({
+    date,
+    km: +(dist / 1000).toFixed(2),
+  }));
+
   return (
     <>
-      {/* ===== CIARA MEDZI MAPOU A GRAFMI ===== */}
+      {/* ===== CIARA ===== */}
       <hr className="border-t-2 border-green-500 my-6" />
 
-      {/* ===== GRAFY ===== */}
+      {/* ===== 2 GRAFY ===== */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* ===== GRAF 1 ===== */}
@@ -86,7 +131,7 @@ export function LiveCharts({ locations }: { locations: Location[] }) {
               <Line
                 type="monotone"
                 dataKey="points"
-                stroke="#16a34a"   // 🟢 ZELENÁ ČIARA
+                stroke="#16a34a"
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 activeDot={{ r: 5 }}
@@ -101,11 +146,7 @@ export function LiveCharts({ locations }: { locations: Location[] }) {
             Včera vs. dnes – porovnanie
           </h3>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={comparison}
-              barCategoryGap={30}
-              barGap={8}
-            >
+            <BarChart data={comparison} barCategoryGap={30} barGap={8}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />
               <YAxis />
@@ -123,10 +164,45 @@ export function LiveCharts({ locations }: { locations: Location[] }) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
       </div>
 
-      {/* ===== MEDZERA POD GRAFMI ===== */}
+      {/* ===== MEDZERA ===== */}
+      <div className="h-6" />
+
+      {/* ===== GRAF 3 ===== */}
+      <div className="w-full h-[300px]">
+        <h3 className="text-lg font-medium mb-2">
+          Aktivita (pondelok – nedeľa)
+        </h3>
+
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={weeklyData}>
+            <CartesianGrid strokeDasharray="3 3" />
+
+            <XAxis
+              dataKey="date"
+              tickFormatter={(d) =>
+                new Date(d).toLocaleDateString('sk-SK', {
+                  weekday: 'short',
+                })
+              }
+            />
+
+            <YAxis unit=" km" />
+            <Tooltip />
+
+            <Line
+              type="monotone"
+              dataKey="km"
+              stroke="#16a34a"
+              strokeWidth={3}
+              dot={{ r: 4 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* ===== MEDZERA ===== */}
       <div className="h-6" />
     </>
   );
