@@ -245,13 +245,13 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
       },
       {
         id: FAKE2_ID,
-        device_name: 'Zariadenie 2 (Fake)',
+        device_name: 'Zariadenie 2 ',
         is_online: true,
         currentLocation: fake2Current,
       },
       {
         id: FAKE3_ID,
-        device_name: 'Zariadenie 3 (Fake)',
+        device_name: 'Zariadenie 3 ',
         is_online: true,
         currentLocation: fake3Current,
       },
@@ -293,8 +293,8 @@ export function Dashboard({ initialTab = 'about' }: DashboardProps) {
 
     return [
       { id: REAL_ID, name: 'Zariadenie 1 (Reálne)' },
-      { id: FAKE2_ID, name: 'Zariadenie 2 (Fake)' },
-      { id: FAKE3_ID, name: 'Zariadenie 3 (Fake)' },
+      { id: FAKE2_ID, name: 'Zariadenie 2 ' },
+      { id: FAKE3_ID, name: 'Zariadenie 3 ' },
     ];
   }, [isAdmin]);
 
