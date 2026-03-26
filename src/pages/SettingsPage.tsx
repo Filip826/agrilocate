@@ -280,7 +280,7 @@ export function SettingsPage() {
   const statusText = () => {
     if (currentStatus === 'outside') return 'Zariadenie je von z ohrady';
     if (currentStatus === 'still') return 'Zariadenie sa nepohlo viac ako 10 hodín';
-    if (currentStatus === 'ok') return 'Zariadenie je vypnute';
+    if (currentStatus === 'ok') return 'Zariadenie je vypnuté';
     return 'Stav zariadenia nie je dostupný';
   };
 
