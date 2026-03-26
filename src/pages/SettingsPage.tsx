@@ -338,29 +338,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* História notifikácií */}
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <h3 className="text-xl font-semibold mb-4">História notifikácií</h3>
-        {loading ? (
-          <div className="text-gray-500">Načítavam notifikácie...</div>
-        ) : notifications.length === 0 ? (
-          <div className="text-gray-500">Zatiaľ žiadne notifikácie.</div>
-        ) : (
-          <div className="space-y-3">
-            {notifications.map((n) => (
-              <div key={n.id} className={`border rounded-xl p-4 ${notificationBox(n.type)}`}>
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">{notificationIcon(n.type)}</div>
-                  <div className="flex-1">
-                    <div className="font-medium">{n.text}</div>
-                    <div className="text-xs mt-1 opacity-80">{new Date(n.createdAt).toLocaleString('sk-SK')}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+     
     </div>
   );
 }
