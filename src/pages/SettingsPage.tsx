@@ -246,7 +246,7 @@ export function SettingsPage() {
         // 🔥 EMAIL RAZ ZA HODINU (success)
         if (!lastHourlyRef.current || !sameHour(lastHourlyRef.current, now)) {
           lastHourlyRef.current = now;
-          pushNotification('success', 'Zariadenie je v poriadku.');
+          pushNotification('success', 'Zariadenie je vypnuté.');
         }
 
         if (mounted) {
@@ -280,7 +280,7 @@ export function SettingsPage() {
   const statusText = () => {
     if (currentStatus === 'outside') return 'Zariadenie je von z ohrady';
     if (currentStatus === 'still') return 'Zariadenie sa nepohlo viac ako 10 hodín';
-    if (currentStatus === 'ok') return 'Zariadenie je v poriadku';
+    if (currentStatus === 'ok') return 'Zariadenie je vypnuté';
     return 'Stav zariadenia nie je dostupný';
   };
 

@@ -48,7 +48,7 @@ serve(async () => {
 
     const latest = data[0];
 
-    let message = "Zariadenie je v poriadku.";
+    let message = "Zariadenie je vypnuté.";
 
     if (!isInsidePolygon(latest.lat, latest.lon, fence)) {
       message = `❌ Zariadenie je MIMO ohrady (${latest.lat}, ${latest.lon})`;
